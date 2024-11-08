@@ -97,6 +97,46 @@ plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis('off')
 plt.show()
 
-
+#Train test split
 X = X.iloc[:999].copy()  # Make a copy to avoid SettingWithCopyWarning
-#In case you have not noticed the nltk removed the very common english words from the text!!
+
+from sklearn.model_selection import train_test_split
+
+# Make a copy to avoid SettingWithCopyWarning and limit to the first 999 rows for consistency
+X = X.iloc[:999].copy()
+y = y.iloc[:999].copy()
+
+# Train-validation-test split with an 80-10-10 ratio
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+# Verify the split sizes
+print("Training set size:", X_train.shape[0])
+print("Validation set size:", X_val.shape[0])
+print("Test set size:", X_test.shape[0])
+
+
+# Apply minhashing
+from datasketch import MinHash, MinHashLSH
+import numpy as np
+
+# Define MinHash parameters
+num_perm = 100  # Number of hash functions
+
+# Function to apply MinHashing
+def minhash_vectorize(text, num_perm=100):
+    # Initialize MinHash object
+    minhash = MinHash(num_perm=num_perm)
+    
+    # Apply shingles of size 1 (i.e., individual words)
+    for word in text.split():
+        minhash.update(word.encode('utf8'))  # Convert each word to bytes for hashing
+        
+    # Return the hash values as a numpy array
+    return np.array(minhash.hashvalues)
+
+# Apply MinHash vectorization to the cleaned_body in X_train
+X_train['minhash_vector'] = X_train['cleaned_body'].apply(lambda x: minhash_vectorize(x, num_perm))
+
+# Display a sample of the vectorized result
+print(X_train[['cleaned_body', 'minhash_vector']].head())
