@@ -48,22 +48,55 @@ X = depression.drop(columns=['label'])  # Feature matrix without 'label' column
 
 import re
 import nltk
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
+from nltk.stem import WordNetLemmatizer
+import pandas as pd
+import matplotlib.pyplot as plt
 
-# Download NLTK stopwords if not already downloaded
+# Download NLTK resources if not already downloaded
 nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('omw-1.4')  # Download for better lemmatization support
 
-# Preprocess function without lemmatization
+# Initialize the WordNet lemmatizer
+lemmatizer = WordNetLemmatizer()
+
+# Define the custom preprocessing function with lemmatization
 def preprocess_text(text):
-    text = text.lower()  # Lowercasing
-    text = re.sub(r'\W', ' ', text)  # Remove punctuation
-    text = re.sub(r'\s+', ' ', text)  # Remove extra whitespace
+    # Convert to lowercase and remove punctuation
+    text = text.lower()
+    text = re.sub(r'\W', ' ', text)
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Tokenize and remove stopwords
     words = text.split()
-    words = [word for word in words if word not in stopwords.words('english')]  # Remove stopwords
-    return ' '.join(words)
+    words = [word for word in words if word not in stopwords.words('english')]
+    
+    # Lemmatize each word
+    lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
+    
+    # Join words back to a single string
+    return ' '.join(lemmatized_words)
 
-# Apply preprocessing only to the first 10,000 rows
-X.loc[:999, 'cleaned_body'] = X['body'].iloc[:1000].apply(preprocess_text)
+# Apply preprocessing and skip empty results
+X['cleaned_body'] = X['body'].iloc[:10000].apply(lambda x: preprocess_text(x) if preprocess_text(x).strip() else x)
+
+# Display the result
+print(X[['body', 'cleaned_body']].head())
+from wordcloud import WordCloud
+
+# Combine all preprocessed text into a single string for word cloud generation
+text_for_wordcloud = ' '.join(X['cleaned_body'])
+
+# Generate the word cloud
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text_for_wordcloud)
+
+# Plot the word cloud
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.show()
+
 
 X = X.iloc[:999].copy()  # Make a copy to avoid SettingWithCopyWarning
 #In case you have not noticed the nltk removed the very common english words from the text!!
