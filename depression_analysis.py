@@ -45,7 +45,6 @@ X = depression.drop(columns=['label'])  # Feature matrix without 'label' column
 
 
 #Data Preprocessing
-
 import re
 import nltk
 from nltk.corpus import stopwords, wordnet
@@ -83,7 +82,12 @@ X['cleaned_body'] = X['body'].iloc[:10000].apply(lambda x: preprocess_text(x) if
 
 # Display the result
 print(X[['body', 'cleaned_body']].head())
+
 from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+
+# Convert non-string values in 'cleaned_body' to empty strings
+X['cleaned_body'] = X['cleaned_body'].fillna('').astype(str)
 
 # Combine all preprocessed text into a single string for word cloud generation
 text_for_wordcloud = ' '.join(X['cleaned_body'])
@@ -97,8 +101,6 @@ plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis('off')
 plt.show()
 
-#Train test split
-X = X.iloc[:999].copy()  # Make a copy to avoid SettingWithCopyWarning
 
 from sklearn.model_selection import train_test_split
 
@@ -115,28 +117,134 @@ print("Training set size:", X_train.shape[0])
 print("Validation set size:", X_val.shape[0])
 print("Test set size:", X_test.shape[0])
 
-
-# Apply minhashing
-from datasketch import MinHash, MinHashLSH
+from datasketch import MinHash
+from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score
 import numpy as np
+import pandas as pd
+from collections import Counter
 
 # Define MinHash parameters
-num_perm = 100  # Number of hash functions
+num_perm = 1000  # Number of hash functions
 
 # Function to apply MinHashing
-def minhash_vectorize(text, num_perm=100):
-    # Initialize MinHash object
+def minhash_vectorize(text, num_perm=1000):
     minhash = MinHash(num_perm=num_perm)
-    
-    # Apply shingles of size 1 (i.e., individual words)
     for word in text.split():
-        minhash.update(word.encode('utf8'))  # Convert each word to bytes for hashing
-        
-    # Return the hash values as a numpy array
+        minhash.update(word.encode('utf8'))
     return np.array(minhash.hashvalues)
 
-# Apply MinHash vectorization to the cleaned_body in X_train
+# Apply MinHash vectorization to the cleaned_body in X_train and X_val
 X_train['minhash_vector'] = X_train['cleaned_body'].apply(lambda x: minhash_vectorize(x, num_perm))
+X_val['minhash_vector'] = X_val['cleaned_body'].apply(lambda x: minhash_vectorize(x, num_perm))
 
-# Display a sample of the vectorized result
-print(X_train[['cleaned_body', 'minhash_vector']].head())
+# Stack the MinHash vectors into a 2D array for KMeans input
+minhash_vectors_train = np.vstack(X_train['minhash_vector'].values)
+minhash_vectors_val = np.vstack(X_val['minhash_vector'].values)
+
+# Define and fit the KMeans model with 3 clusters
+kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans.fit(minhash_vectors_train)
+
+# Assign each training review to a cluster
+X_train['cluster'] = kmeans.labels_
+
+# Map each cluster to the most frequent sentiment in that cluster
+cluster_to_sentiment = {}
+for cluster in range(3):
+    cluster_labels = y_train[X_train['cluster'] == cluster]
+    most_common_sentiment = Counter(cluster_labels).most_common(1)[0][0]
+    cluster_to_sentiment[cluster] = most_common_sentiment
+
+# Predict the clusters for the validation set
+val_clusters = kmeans.predict(minhash_vectors_val)
+
+# Map the clusters to sentiments based on training data cluster assignments
+y_val_pred = [cluster_to_sentiment[cluster] for cluster in val_clusters]
+
+# Calculate and print accuracy
+accuracy = accuracy_score(y_val, y_val_pred)
+print("Validation accuracy:", accuracy)
+
+# Print cluster composition to examine the distribution of sentiments in clusters
+for cluster in range(3):
+    print(f"Cluster {cluster} composition:", Counter(y_train[X_train['cluster'] == cluster]))
+
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
+# Reduce MinHash vectors to 2D for visualization
+pca = PCA(n_components=2)
+train_vectors_2d = pca.fit_transform(minhash_vectors_train)
+
+# Plot the clusters with different colors
+plt.figure(figsize=(10, 7))
+for cluster in range(3):
+    cluster_points = train_vectors_2d[X_train['cluster'] == cluster]
+    plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}', alpha=0.6)
+
+plt.title('KMeans Clusters of MinHash Vectors (PCA-reduced to 2D)')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.legend()
+plt.show()
+
+
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score
+import numpy as np
+import pandas as pd
+from collections import Counter
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
+# Initialize CountVectorizer with binary=True for one-hot encoding
+vectorizer = CountVectorizer(binary=True)
+
+# Fit on training data and transform both training and validation data
+X_train_oh = vectorizer.fit_transform(X_train['cleaned_body'])
+X_val_oh = vectorizer.transform(X_val['cleaned_body'])
+
+# Define and fit the KMeans model with 3 clusters on the one-hot encoded training data
+kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans.fit(X_train_oh)
+
+# Assign each training review to a cluster
+X_train['cluster'] = kmeans.labels_
+
+# Map each cluster to the most frequent sentiment in that cluster
+cluster_to_sentiment = {}
+for cluster in range(3):
+    cluster_labels = y_train[X_train['cluster'] == cluster]
+    most_common_sentiment = Counter(cluster_labels).most_common(1)[0][0]
+    cluster_to_sentiment[cluster] = most_common_sentiment
+
+# Predict the clusters for the validation set
+val_clusters = kmeans.predict(X_val_oh)
+
+# Map the clusters to sentiments based on training data cluster assignments
+y_val_pred = [cluster_to_sentiment[cluster] for cluster in val_clusters]
+
+# Calculate and print accuracy
+accuracy_train = accuracy_score(y_train, [cluster_to_sentiment[cluster] for cluster in kmeans.labels_])
+accuracy_val = accuracy_score(y_val, y_val_pred)
+print("Training accuracy:", accuracy_train)
+print("Validation accuracy:", accuracy_val)
+
+# Plotting the clusters for training data
+# Reduce the dimensionality for visualization using PCA
+pca = PCA(n_components=2)
+train_vectors_2d = pca.fit_transform(X_train_oh.toarray())  # Convert sparse matrix to dense for PCA
+
+plt.figure(figsize=(10, 7))
+for cluster in range(3):
+    cluster_points = train_vectors_2d[X_train['cluster'] == cluster]
+    plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}', alpha=0.6)
+
+plt.title('KMeans Clusters of One-Hot Encoded Vectors (PCA-reduced to 2D)')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.legend()
+plt.show()
