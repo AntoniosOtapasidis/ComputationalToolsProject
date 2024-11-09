@@ -3,7 +3,9 @@ import re
 import nltk
 from nltk.corpus import stopwords
 
-depression = pd.read_csv('./data/reddit_depression_dataset.csv')
+# Read dataset with pandas
+#depression = pd.read_csv('reddit_depression_dataset.csv')
+#depression = pd.read_csv('./data/reddit_depression_dataset.csv')
 
 #compress the dataset
 depression.to_csv("reddit_depression_dataset.tsv.gz", sep='\t', index=False, compression='gzip')
