@@ -41,7 +41,7 @@ def preprocess_text(text):
 
 def preprocess(data_path):
 
-    df = pd.read_csv(data_path)
+    df = pd.read_csv(data_path).head(100)
     print(df.head())
 
     # Display descriptive statistics for numerical columns
@@ -109,21 +109,22 @@ def word_cloud_function(X, path='figures/wordcloud.png'):
     plt.axis('off')
     plt.savefig(path)
 
-
+def minhash_vectorize(text, num_perm=1000):
+    minhash = MinHash(num_perm=num_perm)
+    for word in text.split():
+        minhash.update(word.encode('utf8'))
+    return np.array(minhash.hashvalues)
 
 def minhashing(X):
     # Define MinHash parameters
     num_perm = 1000  # Number of hash functions
 
-    # Function to apply MinHashing
-    def minhash_vectorize(text, num_perm=1000):
-        minhash = MinHash(num_perm=num_perm)
-        for word in text.split():
-            minhash.update(word.encode('utf8'))
-        return np.array(minhash.hashvalues)
+    # Apply MinHash vectorization using multiprocessing
+    with Pool(processes=NUM_CORES) as pool:
+        minhash_vectors = pool.map(minhash_vectorize, X['cleaned_body'].tolist())
 
-    # Apply MinHash vectorization to the cleaned_body in X_train and X_val
-    X['minhash_vector'] = X['cleaned_body'].apply(lambda x: minhash_vectorize(x, num_perm))
+    # Assign the MinHash vectors back to the DataFrame
+    X['minhash_vector'] = minhash_vectors
     return X
 
 def kmeans_clustering(X_train, y_train, X_val, y_val, num_clusters=3):
@@ -162,7 +163,9 @@ if __name__ == '__main__':
     word_cloud_function(df)
     # Save the cleaned DataFrame to a pickle file
     
-    # df = minhashing(df)
+    df = minhashing(df)
+    with open(DATA_PATH + 'df_minhash.pkl', 'wb') as f:
+        pickle.dump(df, f)
     # kmeans_clustering(df, y_train, X_val, y_val, num_clusters=3)
 
     # If statement just to not run the code right now
