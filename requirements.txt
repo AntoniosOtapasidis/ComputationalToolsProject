@@ -3,3 +3,6 @@ matplotlib
 nltk
 numpy
 pandas
+scikit-learn
+wordcloud
+datasketch
