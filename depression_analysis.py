@@ -13,61 +13,16 @@ import numpy as np
 from collections import Counter
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import PCA
-
-# Read dataset with pandas
-depression = pd.read_csv('reddit_depression_dataset.csv')
-#depression = pd.read_csv('./data/reddit_depression_dataset.csv')
-
-#compress the dataset
-depression.to_csv("reddit_depression_dataset.tsv.gz", sep='\t', index=False, compression='gzip')
+from multiprocessing import Pool
+import pickle
 
 
-depression = pd.read_csv('reddit_depression_dataset.tsv.gz', sep='\t')
-print(depression.head())
+DATA_PATH = 'data/'
+DATA_FILE = 'reddit_depression_dataset.csv'
+NUM_CORES = 4
+SAMPLE_SIZE = 10000
 
-# Display descriptive statistics for numerical columns
-# Get an overview of the DataFrame, including counts of non-null entries per column
-print(depression.info())
-
-# Count of NaNs in each column
-print(depression.isna().sum())
-
-#Preprocessing
-#1) Exclude the empty/NA body
-
-# Drop rows where 'body' column is NaN
-depression = depression.dropna(subset=['body'])
-depression = depression.dropna(subset=['Unnamed: 0'])
-# Drop rows where all columns except 'subreddit' and 'Unnamed: 0' are NaN
-depression = depression.dropna(how='all', subset=[col for col in depression.columns if col not in ['subreddit', 'Unnamed: 0']])
-
-# Replace NaN values in 'num_comments' column with 0.0
-depression['num_comments'] = depression['num_comments'].fillna(0.0)
-print(depression.head())
-
-# Check if there is a 0 in the 'upvotes' column
-has_zero = (depression['upvotes'] == 0).any()
-
-print("Is there a 0 in the upvotes column?", has_zero)
-
-#I don t thing we need the created_UTC since it is just the number the reddit was created
-depression= depression.drop(columns=['created_utc'])  # Feature matrix without 'label' column
-
-y = depression['label']
-X = depression.drop(columns=['label'])  # Feature matrix without 'label' column
-
-
-#Data Preprocessing
-
-# Download NLTK resources if not already downloaded
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('omw-1.4')  # Download for better lemmatization support
-
-# Initialize the WordNet lemmatizer
-lemmatizer = WordNetLemmatizer()
-
-# Define the custom preprocessing function with lemmatization
+# Define the custom preprocessing function with lemmatization for pool.map
 def preprocess_text(text):
     # Convert to lowercase and remove punctuation
     text = text.lower()
@@ -84,149 +39,168 @@ def preprocess_text(text):
     # Join words back to a single string
     return ' '.join(lemmatized_words)
 
-# Apply preprocessing and skip empty results
-X['cleaned_body'] = X['body'].iloc[:10000].apply(lambda x: preprocess_text(x) if preprocess_text(x).strip() else x)
+def preprocess(data_path):
 
-# Display the result
-print(X[['body', 'cleaned_body']].head())
+    df = pd.read_csv(data_path)
+    print(df.head())
 
-# Convert non-string values in 'cleaned_body' to empty strings
-X['cleaned_body'] = X['cleaned_body'].fillna('').astype(str)
+    # Display descriptive statistics for numerical columns
+    # Get an overview of the DataFrame, including counts of non-null entries per column
+    print(df.info())
 
-# Combine all preprocessed text into a single string for word cloud generation
-text_for_wordcloud = ' '.join(X['cleaned_body'])
+    # Count of NaNs in each column
+    print(df.isna().sum())
 
-# Generate the word cloud
-wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text_for_wordcloud)
+    #Preprocessing
+    #1) Exclude the empty/NA body
 
-# Plot the word cloud
-plt.figure(figsize=(10, 5))
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis('off')
-plt.show()
+    # Drop rows where 'body' column is NaN
+    df = df.dropna(subset=['body'])
+    df = df.dropna(subset=['Unnamed: 0'])
+    # Drop rows where all columns except 'subreddit' and 'Unnamed: 0' are NaN
+    df = df.dropna(how='all', subset=[col for col in df.columns if col not in ['subreddit', 'Unnamed: 0']])
 
+    # Replace NaN values in 'num_comments' column with 0.0
+    df['num_comments'] = df['num_comments'].fillna(0.0)
+    print(df.head())
 
-# Make a copy to avoid SettingWithCopyWarning and limit to the first 999 rows for consistency
-X = X.iloc[:999].copy()
-y = y.iloc[:999].copy()
+    # Check if there is a 0 in the 'upvotes' column
+    has_zero = (df['upvotes'] == 0).any()
 
-# Train-validation-test split with an 80-10-10 ratio
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
-X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+    print("Is there a 0 in the upvotes column?", has_zero)
 
-# Verify the split sizes
-print("Training set size:", X_train.shape[0])
-print("Validation set size:", X_val.shape[0])
-print("Test set size:", X_test.shape[0])
+    #I don t thing we need the created_UTC since it is just the number the reddit was created
+    df= df.drop(columns=['created_utc'])  # Feature matrix without 'label' column
 
-# Define MinHash parameters
-num_perm = 1000  # Number of hash functions
+    # Download NLTK resources if not already downloaded
+    nltk.download('stopwords')
+    nltk.download('wordnet')
+    nltk.download('omw-1.4')  # Download for better lemmatization support
 
-# Function to apply MinHashing
-def minhash_vectorize(text, num_perm=1000):
-    minhash = MinHash(num_perm=num_perm)
-    for word in text.split():
-        minhash.update(word.encode('utf8'))
-    return np.array(minhash.hashvalues)
+    # Initialize the WordNet lemmatizer
+    global lemmatizer
+    lemmatizer = WordNetLemmatizer()
 
-# Apply MinHash vectorization to the cleaned_body in X_train and X_val
-X_train['minhash_vector'] = X_train['cleaned_body'].apply(lambda x: minhash_vectorize(x, num_perm))
-X_val['minhash_vector'] = X_val['cleaned_body'].apply(lambda x: minhash_vectorize(x, num_perm))
+    # Apply preprocessing using multiprocessing
+    with Pool(processes=NUM_CORES) as pool:
+        cleaned_bodies = pool.map(preprocess_text, df['body'].tolist())
 
-# Stack the MinHash vectors into a 2D array for KMeans input
-minhash_vectors_train = np.vstack(X_train['minhash_vector'].values)
-minhash_vectors_val = np.vstack(X_val['minhash_vector'].values)
+    # Assign the cleaned bodies back to the DataFrame
+    df['cleaned_body'] = cleaned_bodies
 
-# Define and fit the KMeans model with 3 clusters
-kmeans = KMeans(n_clusters=3, random_state=42)
-kmeans.fit(minhash_vectors_train)
+    # Display the result
+    print(df[['body', 'cleaned_body']].head())
 
-# Assign each training review to a cluster
-X_train['cluster'] = kmeans.labels_
+    # Convert non-string values in 'cleaned_body' to empty strings
+    df['cleaned_body'] = df['cleaned_body'].fillna('').astype(str)
 
-# Map each cluster to the most frequent sentiment in that cluster
-cluster_to_sentiment = {}
-for cluster in range(3):
-    cluster_labels = y_train[X_train['cluster'] == cluster]
-    most_common_sentiment = Counter(cluster_labels).most_common(1)[0][0]
-    cluster_to_sentiment[cluster] = most_common_sentiment
+    return df
 
-# Predict the clusters for the validation set
-val_clusters = kmeans.predict(minhash_vectors_val)
+def word_cloud_function(X, path='figures/wordcloud.png'):
+    # Combine all preprocessed text into a single string for word cloud generation
+    text_for_wordcloud = ' '.join(X['cleaned_body'])
 
-# Map the clusters to sentiments based on training data cluster assignments
-y_val_pred = [cluster_to_sentiment[cluster] for cluster in val_clusters]
+    # Generate the word cloud
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text_for_wordcloud)
 
-# Calculate and print accuracy
-accuracy = accuracy_score(y_val, y_val_pred)
-print("Validation accuracy:", accuracy)
-
-# Print cluster composition to examine the distribution of sentiments in clusters
-for cluster in range(3):
-    print(f"Cluster {cluster} composition:", Counter(y_train[X_train['cluster'] == cluster]))
-
-# Reduce MinHash vectors to 2D for visualization
-pca = PCA(n_components=2)
-train_vectors_2d = pca.fit_transform(minhash_vectors_train)
-
-# Plot the clusters with different colors
-plt.figure(figsize=(10, 7))
-for cluster in range(3):
-    cluster_points = train_vectors_2d[X_train['cluster'] == cluster]
-    plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}', alpha=0.6)
-
-plt.title('KMeans Clusters of MinHash Vectors (PCA-reduced to 2D)')
-plt.xlabel('PCA Component 1')
-plt.ylabel('PCA Component 2')
-plt.legend()
-plt.show()
+    # Plot the word cloud
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.savefig(path)
 
 
-# Initialize CountVectorizer with binary=True for one-hot encoding
-vectorizer = CountVectorizer(binary=True)
 
-# Fit on training data and transform both training and validation data
-X_train_oh = vectorizer.fit_transform(X_train['cleaned_body'])
-X_val_oh = vectorizer.transform(X_val['cleaned_body'])
+def minhashing(X):
+    # Define MinHash parameters
+    num_perm = 1000  # Number of hash functions
 
-# Define and fit the KMeans model with 3 clusters on the one-hot encoded training data
-kmeans = KMeans(n_clusters=3, random_state=42)
-kmeans.fit(X_train_oh)
+    # Function to apply MinHashing
+    def minhash_vectorize(text, num_perm=1000):
+        minhash = MinHash(num_perm=num_perm)
+        for word in text.split():
+            minhash.update(word.encode('utf8'))
+        return np.array(minhash.hashvalues)
 
-# Assign each training review to a cluster
-X_train['cluster'] = kmeans.labels_
+    # Apply MinHash vectorization to the cleaned_body in X_train and X_val
+    X['minhash_vector'] = X['cleaned_body'].apply(lambda x: minhash_vectorize(x, num_perm))
+    return X
 
-# Map each cluster to the most frequent sentiment in that cluster
-cluster_to_sentiment = {}
-for cluster in range(3):
-    cluster_labels = y_train[X_train['cluster'] == cluster]
-    most_common_sentiment = Counter(cluster_labels).most_common(1)[0][0]
-    cluster_to_sentiment[cluster] = most_common_sentiment
+def kmeans_clustering(X_train, y_train, X_val, y_val, num_clusters=3):
+    # Define and fit the KMeans model with specified number of clusters
+    kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+    kmeans.fit(X_train)
 
-# Predict the clusters for the validation set
-val_clusters = kmeans.predict(X_val_oh)
+    # Assign each training review to a cluster
+    X_train['cluster'] = kmeans.labels_
 
-# Map the clusters to sentiments based on training data cluster assignments
-y_val_pred = [cluster_to_sentiment[cluster] for cluster in val_clusters]
+    # Map each cluster to the most frequent sentiment in that cluster
+    cluster_to_sentiment = {}
+    for cluster in range(num_clusters):
+        cluster_labels = y_train[X_train['cluster'] == cluster]
+        most_common_sentiment = Counter(cluster_labels).most_common(1)[0][0]
+        cluster_to_sentiment[cluster] = most_common_sentiment
 
-# Calculate and print accuracy
-accuracy_train = accuracy_score(y_train, [cluster_to_sentiment[cluster] for cluster in kmeans.labels_])
-accuracy_val = accuracy_score(y_val, y_val_pred)
-print("Training accuracy:", accuracy_train)
-print("Validation accuracy:", accuracy_val)
+    # Predict the clusters for the validation set
+    val_clusters = kmeans.predict(X_val)
 
-# Plotting the clusters for training data
-# Reduce the dimensionality for visualization using PCA
-pca = PCA(n_components=2)
-train_vectors_2d = pca.fit_transform(X_train_oh.toarray())  # Convert sparse matrix to dense for PCA
+    # Map the clusters to sentiments based on training data cluster assignments
+    y_val_pred = [cluster_to_sentiment[cluster] for cluster in val_clusters]
 
-plt.figure(figsize=(10, 7))
-for cluster in range(3):
-    cluster_points = train_vectors_2d[X_train['cluster'] == cluster]
-    plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}', alpha=0.6)
+    # Calculate and print accuracy
+    accuracy_train = accuracy_score(y_train, [cluster_to_sentiment[cluster] for cluster in kmeans.labels_])
+    accuracy_val = accuracy_score(y_val, y_val_pred)
+    print("Training accuracy:", accuracy_train)
+    print("Validation accuracy:", accuracy_val)
 
-plt.title('KMeans Clusters of One-Hot Encoded Vectors (PCA-reduced to 2D)')
-plt.xlabel('PCA Component 1')
-plt.ylabel('PCA Component 2')
-plt.legend()
-plt.show()
+    return kmeans, cluster_to_sentiment, accuracy_train, accuracy_val
+
+if __name__ == '__main__':
+    df = preprocess(DATA_PATH+DATA_FILE)
+    with open(DATA_PATH + 'df_clean.pkl', 'wb') as f:
+        pickle.dump(df, f)
+    word_cloud_function(df)
+    # Save the cleaned DataFrame to a pickle file
+    
+    # df = minhashing(df)
+    # kmeans_clustering(df, y_train, X_val, y_val, num_clusters=3)
+
+    # If statement just to not run the code right now
+    # have to fix the code prfore running
+    if False:
+        X = X.iloc[:999].copy()
+        y = y.iloc[:999].copy()
+
+        # Train-validation-test split with an 80-10-10 ratio
+        X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+        # Verify the split sizes
+        print("Training set size:", X_train.shape[0])
+        print("Validation set size:", X_val.shape[0])
+        print("Test set size:", X_test.shape[0])
+        # Initialize CountVectorizer with binary=True for one-hot encoding
+        vectorizer = CountVectorizer(binary=True)
+
+        # Fit on training data and transform both training and validation data
+        X_train_oh = vectorizer.fit_transform(X_train['cleaned_body'])
+        X_val_oh = vectorizer.transform(X_val['cleaned_body'])
+
+        # Perform KMeans clustering
+        kmeans, cluster_to_sentiment, accuracy_train, accuracy_val = kmeans_clustering(X_train_oh, y_train, X_val_oh)
+
+        # Plotting the clusters for training data
+        # Reduce the dimensionality for visualization using PCA
+        pca = PCA(n_components=2)
+        train_vectors_2d = pca.fit_transform(X_train_oh.toarray())  # Convert sparse matrix to dense for PCA
+
+        plt.figure(figsize=(10, 7))
+        for cluster in range(3):
+            cluster_points = train_vectors_2d[X_train['cluster'] == cluster]
+            plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}', alpha=0.6)
+
+        plt.title('KMeans Clusters of One-Hot Encoded Vectors (PCA-reduced to 2D)')
+        plt.xlabel('PCA Component 1')
+        plt.ylabel('PCA Component 2')
+        plt.legend()
+        plt.show()
