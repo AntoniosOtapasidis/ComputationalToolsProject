@@ -1,10 +1,21 @@
 import pandas as pd
 import re
 import nltk
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
+from nltk.stem import WordNetLemmatizer
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+from sklearn.model_selection import train_test_split
+from datasketch import MinHash
+from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score
+import numpy as np
+from collections import Counter
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.decomposition import PCA
 
 # Read dataset with pandas
-#depression = pd.read_csv('reddit_depression_dataset.csv')
+depression = pd.read_csv('reddit_depression_dataset.csv')
 #depression = pd.read_csv('./data/reddit_depression_dataset.csv')
 
 #compress the dataset
@@ -47,12 +58,6 @@ X = depression.drop(columns=['label'])  # Feature matrix without 'label' column
 
 
 #Data Preprocessing
-import re
-import nltk
-from nltk.corpus import stopwords, wordnet
-from nltk.stem import WordNetLemmatizer
-import pandas as pd
-import matplotlib.pyplot as plt
 
 # Download NLTK resources if not already downloaded
 nltk.download('stopwords')
@@ -85,9 +90,6 @@ X['cleaned_body'] = X['body'].iloc[:10000].apply(lambda x: preprocess_text(x) if
 # Display the result
 print(X[['body', 'cleaned_body']].head())
 
-from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-
 # Convert non-string values in 'cleaned_body' to empty strings
 X['cleaned_body'] = X['cleaned_body'].fillna('').astype(str)
 
@@ -104,8 +106,6 @@ plt.axis('off')
 plt.show()
 
 
-from sklearn.model_selection import train_test_split
-
 # Make a copy to avoid SettingWithCopyWarning and limit to the first 999 rows for consistency
 X = X.iloc[:999].copy()
 y = y.iloc[:999].copy()
@@ -118,13 +118,6 @@ X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, r
 print("Training set size:", X_train.shape[0])
 print("Validation set size:", X_val.shape[0])
 print("Test set size:", X_test.shape[0])
-
-from datasketch import MinHash
-from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score
-import numpy as np
-import pandas as pd
-from collections import Counter
 
 # Define MinHash parameters
 num_perm = 1000  # Number of hash functions
@@ -172,9 +165,6 @@ print("Validation accuracy:", accuracy)
 for cluster in range(3):
     print(f"Cluster {cluster} composition:", Counter(y_train[X_train['cluster'] == cluster]))
 
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-
 # Reduce MinHash vectors to 2D for visualization
 pca = PCA(n_components=2)
 train_vectors_2d = pca.fit_transform(minhash_vectors_train)
@@ -191,16 +181,6 @@ plt.ylabel('PCA Component 2')
 plt.legend()
 plt.show()
 
-
-
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.cluster import KMeans
-from sklearn.metrics import accuracy_score
-import numpy as np
-import pandas as pd
-from collections import Counter
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
 
 # Initialize CountVectorizer with binary=True for one-hot encoding
 vectorizer = CountVectorizer(binary=True)
