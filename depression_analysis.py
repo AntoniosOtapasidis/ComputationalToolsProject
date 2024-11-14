@@ -19,8 +19,8 @@ import pickle
 
 DATA_PATH = "data/"
 DATA_FILE = "reddit_depression_dataset.csv"
-NUM_CORES = 4
-SAMPLE_SIZE = 10000
+NUM_CORES = 16
+SAMPLE_SIZE = 1000
 
 
 # Define the custom preprocessing function with lemmatization for pool.map
@@ -43,8 +43,15 @@ def preprocess_text(text):
 
 def preprocess(data_path):
 
-    df = pd.read_csv(data_path).sample(frac=1).head(1000)
+    df = pd.read_csv(data_path)
     print(df.head())
+
+    # Count the number of rows where 'label' is NaN
+    num_nan_labels = df["label"].isna().sum()
+    print(f"Number of rows with NaN 'label': {num_nan_labels}")
+
+    # Drop rows where 'label' column is NaN
+    df = df.dropna(subset=["label"])
 
     # Display descriptive statistics for numerical columns
     # Get an overview of the DataFrame, including counts of non-null entries per column
@@ -118,7 +125,7 @@ def word_cloud_function(X, path="figures/wordcloud.png"):
     plt.savefig(path)
 
 
-def minhash_vectorize(text, num_perm=1000):
+def minhash_vectorize(text, num_perm=500):
     minhash = MinHash(num_perm=num_perm)
     for word in text.split():
         minhash.update(word.encode("utf8"))
@@ -127,7 +134,7 @@ def minhash_vectorize(text, num_perm=1000):
 
 def minhashing(X):
     # Define MinHash parameters
-    num_perm = 1000  # Number of hash functions
+    num_perm = 500 # Number of hash functions
 
     # Apply MinHash vectorization using multiprocessing
     with Pool(processes=NUM_CORES) as pool:
@@ -138,7 +145,7 @@ def minhashing(X):
     return X
 
 
-def kmeans_clustering(X_train, y_train, X_val, y_val, num_clusters=3):
+def kmeans_clustering(X_train, y_train, X_val, y_val, num_clusters=2):
     # Convert MinHash vectors to 2D array
     X_train_minhash = np.vstack(X_train)
     X_val_minhash = np.vstack(X_val)
@@ -174,13 +181,23 @@ def kmeans_clustering(X_train, y_train, X_val, y_val, num_clusters=3):
 
 
 if __name__ == "__main__":
-    df = preprocess(DATA_PATH + DATA_FILE)
-    with open(DATA_PATH + "df_clean.pkl", "wb") as f:
-        pickle.dump(df, f)
-    word_cloud_function(df)
-    # Save the cleaned DataFrame to a pickle file
-
-    df = minhashing(df)
+    # df = preprocess(DATA_PATH + DATA_FILE)
+    # with open(DATA_PATH + "df_clean.pkl", "wb") as f:
+    #     pickle.dump(df, f)
+    # word_cloud_function(df)
+    # # Save the cleaned DataFrame to a pickle file
+    ### FOR READING THE FILE
+    # with open(DATA_PATH + "df_clean.pkl", "rb") as f:
+    #     df = pickle.load(f)
+        
+    # df = minhashing(df)
+    # with open(DATA_PATH + "df_minhash.pkl", "wb") as f:
+    #     pickle.dump(df, f)
+    ### FOR READING THE FILE
+    with open(DATA_PATH + "df_minhash.pkl", "rb") as f:
+        df = pickle.load(f)
+    # Drop rows where 'label' column is NaN
+    df = df.dropna(subset=["label"])
 
     X_train, X_test, y_train, y_test = train_test_split(
         df["minhash_vector"], df["label"], test_size=0.2, random_state=42

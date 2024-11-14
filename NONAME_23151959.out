@@ -1,0 +1,38 @@
+/bin/bash: line 1: hpc_scripts/run_main: Permission denied
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@hpc.dtu.dk>
+Subject: Job 23151959: <NONAME> in cluster <dcc> Exited
+
+Job <NONAME> was submitted from host <hpclogin1> by user <s233201> in cluster <dcc> at Tue Nov 12 14:10:43 2024
+Job was executed on host(s) <n-62-31-23>, in queue <hpc>, as user <s233201> in cluster <dcc> at Tue Nov 12 14:10:44 2024
+</zhome/85/8/203063> was used as the home directory.
+</zhome/85/8/203063/ComputationalToolsProject> was used as the working directory.
+Started at Tue Nov 12 14:10:44 2024
+Terminated at Tue Nov 12 14:10:45 2024
+Results reported at Tue Nov 12 14:10:45 2024
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+hpc_scripts/run_main
+------------------------------------------------------------
+
+Exited with exit code 126.
+
+Resource usage summary:
+
+    CPU time :                                   0.44 sec.
+    Max Memory :                                 -
+    Average Memory :                             -
+    Total Requested Memory :                     1024.00 MB
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              -
+    Max Threads :                                -
+    Run time :                                   22 sec.
+    Turnaround time :                            2 sec.
+
+The output (if any) is above this job summary.
+
