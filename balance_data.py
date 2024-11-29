@@ -68,27 +68,26 @@ def preprocess_data():
         {"bert_embeddings": list(bert_embeddings), "label": data["label"]}
     )
 
-    # Step 2: Split the original dataset into training and temp sets
+    # Balance the entire dataset
+    X_balanced, y_balanced = balance_classes(new_df["bert_embeddings"], new_df["label"])
+
+    # Split the balanced dataset into training, validation, and test sets
     X_train, X_temp, y_train, y_temp = train_test_split(
-        new_df["bert_emebddings"], new_df["label"], test_size=0.7, random_state=42
+        X_balanced, y_balanced, test_size=0.7, random_state=42
     )
 
-    # Step 3: Balance the training set
-    X_train_balanced, y_train_balanced = balance_classes(X_train, y_train)
-
-    # Step 4: Split the temp set into validation and test sets (no balancing applied)
     X_val, X_test, y_val, y_test = train_test_split(
         X_temp, y_temp, test_size=0.5, random_state=42
     )
 
     # Verify alignment of shapes
     print(
-        f"Balanced Train shape: {X_train_balanced.shape}, Train labels: {y_train_balanced.value_counts()}"
+        f"Balanced Train shape: {X_train.shape}, Train labels: {y_train.value_counts()}"
     )
     print(f"Validation shape: {X_val.shape}, Validation labels: {y_val.value_counts()}")
     print(f"Test shape: {X_test.shape}, Test labels: {y_test.value_counts()}")
 
-    return X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test
+    return X_train, y_train, X_val, y_val, X_test, y_test
 
 def kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test):
     best_k = 0
@@ -96,7 +95,7 @@ def kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, 
     results = []
 
     for k in range(2, 11):
-        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans = KMeans(n_clusters=k, random_state=42, n_jobs=-1)
         kmeans.fit(X_train_balanced.tolist())
         
         # Get the cluster labels
@@ -179,7 +178,7 @@ def random_forest_classifier(X_train_balanced, y_train_balanced, X_val, y_val, X
     print(f"Best n_estimators: {best_n_estimators}, Best Validation Accuracy: {best_accuracy}")
 
     # Train the final model with the best n_estimators
-    final_rf = RandomForestClassifier(n_estimators=best_n_estimators, random_state=42)
+    final_rf = RandomForestClassifier(n_estimators=best_n_estimators, random_state=42, n_jobs=-1)
     final_rf.fit(X_train_balanced.tolist(), y_train_balanced)
 
     # Predict the labels for the test set
