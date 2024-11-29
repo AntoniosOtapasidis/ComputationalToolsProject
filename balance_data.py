@@ -99,20 +99,23 @@ def kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, 
         kmeans = KMeans(n_clusters=k, random_state=42)
         kmeans.fit(X_train_balanced.tolist())
         
-        # Predict the closest cluster each sample in X_val belongs to
-        val_clusters = kmeans.predict(X_val.tolist())
+        # Get the cluster labels
+        train_data = pd.DataFrame({"embeddings": X_train_balanced.tolist(), "label": y_train_balanced})
+        train_data['cluster_labels'] = kmeans.labels_
         
-        # Find the closest cluster for each sample in X_val
-        closest, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, X_val.tolist())
-        
-        # Map the clusters to the labels
-        cluster_labels = {i: y_train_balanced[closest[i]] for i in range(k)}
+        # Determine the most common label in each cluster
+        cluster_to_label = {}
+        for cluster in range(k):
+            cluster_labels = train_data[train_data['cluster_labels'] == cluster]['label']
+            most_common_label = cluster_labels.mode()[0]
+            cluster_to_label[cluster] = most_common_label
         
         # Predict the labels for the validation set
-        y_val_pred = [cluster_labels[cluster] for cluster in val_clusters]
+        val_cluster_labels = kmeans.predict(X_val.tolist())
+        val_predicted_labels = [cluster_to_label[cluster] for cluster in val_cluster_labels]
         
         # Calculate the accuracy
-        accuracy = accuracy_score(y_val, y_val_pred)
+        accuracy = np.mean(val_predicted_labels == y_val)
         
         print(f"K={k}, Validation Accuracy: {accuracy}")
         

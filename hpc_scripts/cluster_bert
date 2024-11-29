@@ -20,7 +20,8 @@
 #BSUB -e out/bert_%J.err
 # -- end of LSF options --
 
-source data_tools/bin/activate
+source $BLACKHOLE/dt/bin/activate
+
 
 python cluster_bert.py
 

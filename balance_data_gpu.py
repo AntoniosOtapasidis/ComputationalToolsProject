@@ -2,31 +2,31 @@ import pickle
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+#from cuml.cluster import KMeans
 from sklearn.cluster import KMeans
+#from cuml.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import pairwise_distances_argmin_min
 from tabulate import tabulate
-from sklearn.ensemble import RandomForestClassifier
-
 
 file_path = "data/bert_embeddings.pkl"
 tsv_file_path = "../share/use_this_one.tsv.gz"
-
 
 def balance_classes(X, y):
     """
     Balances the dataset by undersampling the majority class.
 
     Args:
-        X (pd.Series): Feature data.
+        X (np.ndarray): Feature data.
         y (pd.Series): Labels corresponding to the features.
 
     Returns:
         tuple: Balanced X and y.
     """
     # Combine X and y into a DataFrame for easier handling
-    data = pd.DataFrame({"text": X, "label": y})
-
+    data = pd.DataFrame({"text": list(X), "label": y})
+    print(f"Original data size: {data.shape}")
     # Separate the classes
     class_0 = data[data["label"] == 0]
     class_1 = data[data["label"] == 1]
@@ -40,8 +40,13 @@ def balance_classes(X, y):
     # Combine the balanced classes and shuffle
     balanced_data = pd.concat([class_0, class_1]).sample(frac=1, random_state=42)
 
-    return balanced_data["text"], balanced_data["label"]
+    print(f"Balanced data size: {balanced_data.shape}")
 
+    # Convert the 'text' column back to a NumPy array
+    X_balanced = np.array(balanced_data["text"].tolist())
+    y_balanced = balanced_data["label"].values
+
+    return X_balanced, y_balanced
 
 def preprocess_data():
     # Path to the pickle file
@@ -53,6 +58,9 @@ def preprocess_data():
     # Convert bert_embeddings to a NumPy array
     bert_embeddings = np.array(bert_embeddings).squeeze()
 
+    # Ensure the embeddings are 2D arrays
+    bert_embeddings = bert_embeddings.reshape((bert_embeddings.shape[0], -1))
+
     # Load the TSV file
     data = pd.read_csv(tsv_file_path, sep="\t", compression="gzip")
 
@@ -63,15 +71,22 @@ def preprocess_data():
         data
     ), "Length of bert_embeddings and data must match"
 
+    # Randomly sample 1000 entries
+    sampled_indices = np.random.choice(len(data), 1000, replace=False)
+    bert_embeddings = bert_embeddings[sampled_indices]
+    data = data.iloc[sampled_indices]
+
     # Create a new DataFrame with bert_embeddings and label column
     new_df = pd.DataFrame(
         {"bert_embeddings": list(bert_embeddings), "label": data["label"]}
     )
+    del data
 
     # Step 2: Split the original dataset into training and temp sets
     X_train, X_temp, y_train, y_temp = train_test_split(
-        new_df["bert_emebddings"], new_df["label"], test_size=0.7, random_state=42
+        new_df["bert_embeddings"], new_df["label"], test_size=0.7, random_state=42
     )
+
 
     # Step 3: Balance the training set
     X_train_balanced, y_train_balanced = balance_classes(X_train, y_train)
@@ -80,13 +95,27 @@ def preprocess_data():
     X_val, X_test, y_val, y_test = train_test_split(
         X_temp, y_temp, test_size=0.5, random_state=42
     )
+    del X_temp, y_temp
+    del new_df
+    #print(list(X_val))
+
+    # Reshape the dfs to 2D numpy arrays
+    X_train_balanced = np.vstack(X_train_balanced.tolist()).squeeze()
+    X_val = np.vstack([np.array(x[0]).squeeze() for x in X_val])
+    X_test = np.vstack([np.array(x[0]).squeeze() for x in X_test])
+    print(f"Balanced Train shape: {X_train_balanced.shape}")
+    print(f"Validation shape: {X_val.shape}")
+    print(X_val[0].shape)
+    y_train_balanced = y_train_balanced
+    y_val = y_val
+    y_test = y_test
 
     # Verify alignment of shapes
     print(
-        f"Balanced Train shape: {X_train_balanced.shape}, Train labels: {y_train_balanced.value_counts()}"
+        f"Balanced Train shape: {X_train_balanced.shape}, Train labels: {y_train_balanced.shape}"
     )
-    print(f"Validation shape: {X_val.shape}, Validation labels: {y_val.value_counts()}")
-    print(f"Test shape: {X_test.shape}, Test labels: {y_test.value_counts()}")
+    print(f"Validation shape: {X_val.shape}, Validation labels: {y_val.shape}")
+    print(f"Test shape: {X_test.shape}, Test labels: {y_test.shape}")
 
     return X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test
 
@@ -97,15 +126,15 @@ def kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, 
 
     for k in range(2, 11):
         kmeans = KMeans(n_clusters=k, random_state=42)
-        kmeans.fit(X_train_balanced.tolist())
+        kmeans.fit(X_train_balanced)  # No reshaping here
         
         # Predict the closest cluster each sample in X_val belongs to
-        val_clusters = kmeans.predict(X_val.tolist())
+        val_clusters = kmeans.predict(X_val)  # No reshaping here
         
-        # Find the closest cluster for each sample in X_val
-        closest, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, X_val.tolist())
+        # Find the closest cluster for each sample in X_train_balanced
+        closest, _ = pairwise_distances_argmin_min(kmeans.cluster_centers_, X_train_balanced)  # No reshaping here
         
-        # Map the clusters to the labels
+        # Map the clusters to the labels using training labels
         cluster_labels = {i: y_train_balanced[closest[i]] for i in range(k)}
         
         # Predict the labels for the validation set
@@ -126,15 +155,15 @@ def kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, 
 
     # Train the final model with the best K
     final_kmeans = KMeans(n_clusters=best_k, random_state=42)
-    final_kmeans.fit(X_train_balanced.tolist())
+    final_kmeans.fit(X_train_balanced)  # No reshaping here
 
     # Predict the closest cluster each sample in X_test belongs to
-    test_clusters = final_kmeans.predict(X_test.tolist())
+    test_clusters = final_kmeans.predict(X_test)  # No reshaping here
 
-    # Find the closest cluster for each sample in X_test
-    closest, _ = pairwise_distances_argmin_min(final_kmeans.cluster_centers_, X_test.tolist())
+    # Find the closest cluster for each sample in X_train_balanced
+    closest, _ = pairwise_distances_argmin_min(final_kmeans.cluster_centers_, X_train_balanced)  # No reshaping here
 
-    # Map the clusters to the labels
+    # Map the clusters to the labels using training labels
     cluster_labels = {i: y_train_balanced[closest[i]] for i in range(best_k)}
 
     # Predict the labels for the test set
@@ -149,6 +178,8 @@ def kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, 
 
     # Output the results as a table
     print(tabulate(results, headers=["K", "Accuracy"], tablefmt="grid"))
+    return final_kmeans
+    
 
 def random_forest_classifier(X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test):
     best_n_estimators = 0
@@ -157,10 +188,10 @@ def random_forest_classifier(X_train_balanced, y_train_balanced, X_val, y_val, X
 
     for n in range(10, 110, 10):
         rf = RandomForestClassifier(n_estimators=n, random_state=42)
-        rf.fit(X_train_balanced.tolist(), y_train_balanced)
+        rf.fit(X_train_balanced, y_train_balanced)  # No reshaping here
         
         # Predict the labels for the validation set
-        y_val_pred = rf.predict(X_val.tolist())
+        y_val_pred = rf.predict(X_val)  # No reshaping here
         
         # Calculate the accuracy
         accuracy = accuracy_score(y_val, y_val_pred)
@@ -177,10 +208,10 @@ def random_forest_classifier(X_train_balanced, y_train_balanced, X_val, y_val, X
 
     # Train the final model with the best n_estimators
     final_rf = RandomForestClassifier(n_estimators=best_n_estimators, random_state=42)
-    final_rf.fit(X_train_balanced.tolist(), y_train_balanced)
+    final_rf.fit(X_train_balanced, y_train_balanced)
 
     # Predict the labels for the test set
-    y_test_pred = final_rf.predict(X_test.tolist())
+    y_test_pred = final_rf.predict(X_test)  # No reshaping here
 
     # Calculate the accuracy on the test set
     test_accuracy = accuracy_score(y_test, y_test_pred)
@@ -191,13 +222,19 @@ def random_forest_classifier(X_train_balanced, y_train_balanced, X_val, y_val, X
 
     # Output the results as a table
     print(tabulate(results, headers=["n_estimators", "Accuracy"], tablefmt="grid"))
+    return final_rf
 
 def main():
     X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test = preprocess_data()
-    kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test)
-    random_forest_classifier(X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test)
+    final_kmeans = kmeans_clustering(X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test)
+    final_rf = random_forest_classifier(X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test)
     
+    # Save the final models to disk
+    with open("final_kmeans.pkl", "wb") as f:
+        pickle.dump(final_kmeans, f)
 
+    with open("final_rf.pkl", "wb") as f:
+        pickle.dump(final_rf, f)
 
 if __name__ == "__main__":
     main()
