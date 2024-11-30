@@ -1,0 +1,76 @@
++----------------+------------+
+|   n_estimators |   Accuracy |
++================+============+
+|            100 |   0.864348 |
++----------------+------------+
+|            200 |   0.863845 |
++----------------+------------+
+|            300 |   0.864748 |
++----------------+------------+
+|            400 |   0.864565 |
++----------------+------------+
+|            500 |   0.865025 |
++----------------+------------+
+|            600 |   0.864972 |
++----------------+------------+
+|            700 |   0.865288 |
++----------------+------------+
+|            800 |   0.865462 |
++----------------+------------+
+|            900 |   0.865388 |
++----------------+------------+
+|           1000 |   0.865295 |
++----------------+------------+
+Performing hold-out validation for K values: [2, 3, 4, 5, 6, 7, 8, 9, 10]
+K=2, Accuracy=0.8234
+K=3, Accuracy=0.1103
+K=4, Accuracy=0.1437
+K=5, Accuracy=0.0515
+K=6, Accuracy=0.5605
+K=7, Accuracy=0.0638
+K=8, Accuracy=0.0271
+K=9, Accuracy=0.0210
+K=10, Accuracy=0.0776
++-----+------------+
+|   K |   Accuracy |
++=====+============+
+|   2 |  0.823412  |
++-----+------------+
+|   3 |  0.110292  |
++-----+------------+
+|   4 |  0.143738  |
++-----+------------+
+|   5 |  0.0514893 |
++-----+------------+
+|   6 |  0.560479  |
++-----+------------+
+|   7 |  0.0637558 |
++-----+------------+
+|   8 |  0.027073  |
++-----+------------+
+|   9 |  0.0210231 |
++-----+------------+
+|  10 |  0.0775756 |
++-----+------------+
+
+Best n_estimators based on hold-out validation: 800
+/dtu/blackhole/17/203063/dt/lib/python3.12/site-packages/cuml/internals/api_decorators.py:344: UserWarning: For reproducible results in Random Forest Classifier or for almost reproducible results in Random Forest Regressor, n_streams=1 is recommended. If n_streams is > 1, results may vary due to stream/thread timing differences, even when random_state is set
+  return func(**kwargs)
+/dtu/blackhole/17/203063/dt/lib/python3.12/site-packages/cuml/internals/api_decorators.py:188: UserWarning: To use pickling first train using float32 data to fit the estimator
+  ret = func(*args, **kwargs)
+
+Test Set Evaluation:
+              precision    recall  f1-score   support
+
+         0.0       0.94      0.88      0.91    230983
+         1.0       0.67      0.81      0.73     69021
+
+    accuracy                           0.86    300004
+   macro avg       0.80      0.85      0.82    300004
+weighted avg       0.88      0.86      0.87    300004
+
+Test Accuracy: 0.8646
+Test ROC AUC Score: 0.9181
+
+Best K based on hold-out validation: 2
+Test Accuracy for K-means: 0.8225

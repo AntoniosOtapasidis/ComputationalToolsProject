@@ -23,8 +23,7 @@ depression = pd.read_csv("../share/use_this_one.tsv.gz", sep="\t", compression="
 columns_to_keep = ['label', 'cleaned_body', 'unique_id']
 depression = depression[columns_to_keep]
 
-# Limit to 1000 shuffled entries for a test run
-depression = depression.sample(n=1000, random_state=42)
+
 
 # Helper Function to Balance Classes
 def balance_classes(X, y):
