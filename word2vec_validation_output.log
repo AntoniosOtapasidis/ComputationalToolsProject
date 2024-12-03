@@ -1,0 +1,137 @@
+Loading embeddings and labels...
+Loaded embeddings of shape: (922182, 100)
+Loaded labels of shape: (922182,)
+Starting 10-fold cross-validation...
+
+Fold 1
+Accuracy for Fold 1: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.90      0.89     46110
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92219
+   macro avg       0.89      0.89      0.89     92219
+weighted avg       0.89      0.89      0.89     92219
+
+
+Fold 2
+Accuracy for Fold 2: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.91      0.89     46109
+         1.0       0.90      0.88      0.89     46110
+
+    accuracy                           0.89     92219
+   macro avg       0.89      0.89      0.89     92219
+weighted avg       0.89      0.89      0.89     92219
+
+
+Fold 3
+Accuracy for Fold 3: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.90      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Fold 4
+Accuracy for Fold 4: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.91      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Fold 5
+Accuracy for Fold 5: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.91      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Fold 6
+Accuracy for Fold 6: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.91      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Fold 7
+Accuracy for Fold 7: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.90      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Fold 8
+Accuracy for Fold 8: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.91      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Fold 9
+Accuracy for Fold 9: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.90      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Fold 10
+Accuracy for Fold 10: 0.89
+Classification Report:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.90      0.89     46109
+         1.0       0.90      0.88      0.89     46109
+
+    accuracy                           0.89     92218
+   macro avg       0.89      0.89      0.89     92218
+weighted avg       0.89      0.89      0.89     92218
+
+
+Average Accuracy across 10 folds: 0.89
+Cross-validation accuracies saved.
