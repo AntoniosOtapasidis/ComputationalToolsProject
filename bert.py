@@ -1,6 +1,7 @@
 import pandas as pd
 import torch
 from transformers import DistilBertTokenizer, DistilBertModel
+import pickle
 
 # Load the TSV file into a DataFrame
 file_path = '../share/use_this_one.tsv.gz'
@@ -39,10 +40,20 @@ def distilbert_vectorize(text):
     return cls_embeddings
 
 # Apply DistilBERT vectorization to each row in the 'body' column
-df['distilbert_vector'] = df['body'].apply(distilbert_vectorize)
+results = df['body'].apply(distilbert_vectorize)
+
+del model, tokenizer, device, df
+
+# Save the results to a pickle file using with open
+pickle_file_path = 'data/bert_embeddings.pkl'
+with open(pickle_file_path, 'wb') as f:
+    pickle.dump(results, f)
+print(f"Results saved to {pickle_file_path}")
 
 # Convert the 'distilbert_vector' column to a DataFrame
-results_df = pd.DataFrame(df['distilbert_vector'].tolist())
+results_df = pd.DataFrame(results.tolist().squeeze())
+
+del results
 
 # Define the output file path
 output_file_path = 'data/bert_embeddings.csv.gz'

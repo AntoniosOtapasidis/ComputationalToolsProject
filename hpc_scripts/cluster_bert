@@ -1,17 +1,14 @@
 #!/bin/sh
 ### General options
-### –- specify queue --
-#BSUB -q gpuv100
 ### -- set the job Name --
-#BSUB -J bertjob
+#BSUB -J bertclust
 ### -- ask for number of cores (default: 1) --
-#BSUB -n 1
-### -- Select the resources: 1 gpu in exclusive process mode --
-#BSUB -gpu "num=1"
+#BSUB -n 8
+
 ### -- set walltime limit: hh:mm --  maximum 24 hours for GPU-queues right now
 #BSUB -W 12:00
 # request 5GB of system-memory
-#BSUB -R "rusage[mem=32GB]"
+#BSUB -R "rusage[mem=8GB]"
 ### -- set the email address --
 # please uncomment the following line and put in your e-mail address,
 # if you want to receive e-mail notifications on a non-default address
@@ -23,11 +20,7 @@
 #BSUB -e out/bert_%J.err
 # -- end of LSF options --
 
-nvidia-smi
-# Load the cuda module
-module load cuda/11.6
+source $BLACKHOLE/dt/bin/activate
 
-source data_tools/bin/activate
-
-python bert.py
+python balance_data_gpu.py
 
