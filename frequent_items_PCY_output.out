@@ -1,0 +1,225 @@
+Activated Python environment:
+/zhome/3c/3/203150/ComputationalToolsProject/my_env/bin/python
+Python 3.9.18
+Loaded original dataset.
+label               0       1
+subreddit                    
+DeepThoughts     6836       0
+SuicideWatch        0  179200
+depression          0  281891
+happy           15184       0
+teenagers     1516914       0
+Preprocessed dataset saved.
+Balanced dataset created.
+Dimensions of the balanced dataset: (922182, 2)
+Number of each label in the balanced dataset:
+label
+0    461091
+1    461091
+Name: count, dtype: int64
+Recreated 'item_sets' column after balancing the classes.
+1374117                         {piss, literally, sit, like}
+1937805    {make, hold, anymore, constructive, pressure, ...
+1864077    {old, worth, time, live, survive, good, like, ...
+1700960    {day, hour, live, help, doctor, world, expect,...
+39785                                         {freaky, shit}
+Name: item_sets, dtype: object
+[{'piss', 'literally', 'sit', 'like'}, {'make', 'hold', 'anymore', 'constructive', 'pressure', 'improve', 'usage', 'single', 'terribly', 'judge', 'harmful', 'non', 'productive', 'depressed', 'responsibility', 'need', 'beautiful', 'sense', 'work', 'best', 'later', 'stuff', 'suck', 'connect', 'small', 'way', 'depression', 'involved', 'like', 'person', 'feel', 'different', 'read', 'feeling', 'day', 'address', 'anonymous', 'godspeed', 'commiserate', 'strong', 'people', 'offend', 'depress', 'place', 'come', 'good', 'benefit', 'hopefully', 'wish', 'habit', 'hope', 'probably', 'matter', 'rubric', 'sub', 'kind', 'leave', 'hear', 'failure', 'inner', 'think', 'respond', 'felt', 'void', 'greatly', 'completely', 'agree', 'normal', 'self', 'bad', 'direct', 'action', 'really', 'life', 'vent', 'reflect', 'state', 'assign', 'enable', 'time', 'horribly', 'comment', 'appreciate', 'express', 'share', 'nature', 'accountable', 'hopeless', 'open'}, {'old', 'worth', 'time', 'live', 'survive', 'good', 'like', 'work', 'worry', 'problem', 'world', 'longs', 'age', 'struggle', 'moment', 'porblems', 'born'}, {'day', 'hour', 'live', 'help', 'doctor', 'world', 'expect', 'waking', 'tire', 'meds'}, {'freaky', 'shit'}]
+First pass completed in 308.96 seconds
+Number of frequent buckets with threshold at 10000: 1000
+Number of frequent items with threshold at 20000: 312
+Finished with PCY first pass!
+Start processing chunk 1/16 for second pass
+Chunk 1: Processed 0 transactions out of 57636
+Start processing chunk 2/16 for second pass
+Chunk 2: Processed 0 transactions out of 57636
+Start processing chunk 3/16 for second pass
+Chunk 3: Processed 0 transactions out of 57636
+Start processing chunk 4/16 for second pass
+Chunk 4: Processed 0 transactions out of 57636
+Start processing chunk 5/16 for second pass
+Chunk 5: Processed 0 transactions out of 57636
+Start processing chunk 6/16 for second pass
+Chunk 6: Processed 0 transactions out of 57636
+Start processing chunk 7/16 for second pass
+Chunk 7: Processed 0 transactions out of 57636
+Start processing chunk 8/16 for second pass
+Chunk 8: Processed 0 transactions out of 57636
+Start processing chunk 9/16 for second pass
+Chunk 9: Processed 0 transactions out of 57636
+Start processing chunk 10/16 for second pass
+Chunk 10: Processed 0 transactions out of 57636
+Start processing chunk 11/16 for second pass
+Chunk 11: Processed 0 transactions out of 57636
+Start processing chunk 12/16 for second pass
+Chunk 12: Processed 0 transactions out of 57636
+Start processing chunk 13/16 for second pass
+Chunk 13: Processed 0 transactions out of 57636
+Start processing chunk 14/16 for second pass
+Chunk 14: Processed 0 transactions out of 57636
+Start processing chunk 15/16 for second pass
+Chunk 15: Processed 0 transactions out of 57636
+Start processing chunk 16/16 for second pass
+Chunk 16: Processed 0 transactions out of 57636
+Chunk 1: Processed 50000 transactions out of 57636
+Chunk 2: Processed 50000 transactions out of 57636
+Chunk 4: Processed 50000 transactions out of 57636
+Chunk 3: Processed 50000 transactions out of 57636
+Chunk 6: Processed 50000 transactions out of 57636
+Chunk 5: Processed 50000 transactions out of 57636
+Chunk 7: Processed 50000 transactions out of 57636
+Chunk 9: Processed 50000 transactions out of 57636
+Chunk 8: Processed 50000 transactions out of 57636
+Chunk 12: Processed 50000 transactions out of 57636
+Chunk 11: Processed 50000 transactions out of 57636
+Chunk 10: Processed 50000 transactions out of 57636
+Chunk 13: Processed 50000 transactions out of 57636
+Chunk 15: Processed 50000 transactions out of 57636
+Chunk 16: Processed 50000 transactions out of 57636
+Chunk 14: Processed 50000 transactions out of 57636
+Second pass completed in 94.13 seconds
+Number of frequent pairs with threshold at 20000: 2891
+finished with PCY second pass!
+Start processing chunk 1/16 for third pass
+Chunk 1: Processed 0 transactions out of 57636
+Start processing chunk 2/16 for third pass
+Chunk 2: Processed 0 transactions out of 57636
+Start processing chunk 3/16 for third pass
+Chunk 3: Processed 0 transactions out of 57636
+Start processing chunk 4/16 for third pass
+Chunk 4: Processed 0 transactions out of 57636
+Start processing chunk 5/16 for third pass
+Chunk 5: Processed 0 transactions out of 57636
+Start processing chunk 6/16 for third pass
+Chunk 6: Processed 0 transactions out of 57636
+Start processing chunk 7/16 for third pass
+Chunk 7: Processed 0 transactions out of 57636
+Start processing chunk 8/16 for third pass
+Chunk 8: Processed 0 transactions out of 57636
+Start processing chunk 9/16 for third pass
+Chunk 9: Processed 0 transactions out of 57636
+Start processing chunk 10/16 for third pass
+Chunk 10: Processed 0 transactions out of 57636
+Start processing chunk 11/16 for third pass
+Chunk 11: Processed 0 transactions out of 57636
+Start processing chunk 12/16 for third pass
+Chunk 12: Processed 0 transactions out of 57636
+Start processing chunk 13/16 for third pass
+Chunk 13: Processed 0 transactions out of 57636
+Start processing chunk 14/16 for third pass
+Chunk 14: Processed 0 transactions out of 57636
+Start processing chunk 15/16 for third pass
+Chunk 15: Processed 0 transactions out of 57636
+Start processing chunk 16/16 for third pass
+Chunk 16: Processed 0 transactions out of 57636
+Start processing chunk 1/16
+Chunk 1: Processed 0 transactions out of 57636
+Chunk 1: Processed 50000 transactions out of 57636
+Start processing chunk 4/16
+Chunk 4: Processed 0 transactions out of 57636
+Chunk 4: Processed 50000 transactions out of 57636
+Start processing chunk 12/16
+Chunk 12: Processed 0 transactions out of 57636
+Chunk 12: Processed 50000 transactions out of 57636
+Start processing chunk 5/16
+Chunk 5: Processed 0 transactions out of 57636
+Chunk 5: Processed 50000 transactions out of 57636
+Start processing chunk 6/16
+Chunk 6: Processed 0 transactions out of 57636
+Chunk 6: Processed 50000 transactions out of 57636
+Start processing chunk 7/16
+Chunk 7: Processed 0 transactions out of 57636
+Chunk 7: Processed 50000 transactions out of 57636
+Start processing chunk 3/16
+Chunk 3: Processed 0 transactions out of 57636
+Chunk 3: Processed 50000 transactions out of 57636
+Start processing chunk 2/16
+Chunk 2: Processed 0 transactions out of 57636
+Chunk 2: Processed 50000 transactions out of 57636
+Start processing chunk 15/16
+Chunk 15: Processed 0 transactions out of 57636
+Chunk 15: Processed 50000 transactions out of 57636
+Start processing chunk 9/16
+Chunk 9: Processed 0 transactions out of 57636
+Chunk 9: Processed 50000 transactions out of 57636
+Start processing chunk 13/16
+Chunk 13: Processed 0 transactions out of 57636
+Chunk 13: Processed 50000 transactions out of 57636
+Start processing chunk 8/16
+Chunk 8: Processed 0 transactions out of 57636
+Chunk 8: Processed 50000 transactions out of 57636
+Start processing chunk 11/16
+Chunk 11: Processed 0 transactions out of 57636
+Chunk 11: Processed 50000 transactions out of 57636
+Start processing chunk 10/16
+Chunk 10: Processed 0 transactions out of 57636
+Chunk 10: Processed 50000 transactions out of 57636
+Start processing chunk 16/16
+Chunk 16: Processed 0 transactions out of 57636
+Chunk 16: Processed 50000 transactions out of 57636
+Start processing chunk 14/16
+Chunk 14: Processed 0 transactions out of 57636
+Chunk 14: Processed 50000 transactions out of 57636
+Chunk 16: Processed 50000 transactions out of 57636
+Chunk 4: Processed 50000 transactions out of 57636
+Chunk 12: Processed 50000 transactions out of 57636
+Chunk 9: Processed 50000 transactions out of 57636
+Chunk 15: Processed 50000 transactions out of 57636
+Chunk 6: Processed 50000 transactions out of 57636
+Chunk 7: Processed 50000 transactions out of 57636
+Chunk 1: Processed 50000 transactions out of 57636
+Chunk 2: Processed 50000 transactions out of 57636
+Chunk 8: Processed 50000 transactions out of 57636
+Chunk 5: Processed 50000 transactions out of 57636
+Chunk 11: Processed 50000 transactions out of 57636
+Chunk 3: Processed 50000 transactions out of 57636
+Chunk 13: Processed 50000 transactions out of 57636
+Chunk 14: Processed 50000 transactions out of 57636
+Chunk 10: Processed 50000 transactions out of 57636
+Third pass completed in 709.85 seconds
+Number of frequent triplets with threshold at 30000: 3321
+Finished with PCY Third Pass!
+Finished with counting frequent triplets in the posts.
+Finished with updated plots
+Balanced Train shape: (645098,), Train labels: label
+1    322549
+0    322549
+Name: count, dtype: int64
+Validation shape: (138327,), Validation labels: label
+1    69479
+0    68848
+Name: count, dtype: int64
+Test shape: (138328,), Test labels: label
+0    69265
+1    69063
+Name: count, dtype: int64
+Preprocessing for modeling complete.
+k=2, Validation Accuracy: 0.5584448444627585
+k=3, Validation Accuracy: 0.6033818415782891
+k=4, Validation Accuracy: 0.6345109776110232
+k=5, Validation Accuracy: 0.657868673505534
+k=6, Validation Accuracy: 0.6599073210580726
+k=7, Validation Accuracy: 0.6391449247073963
+k=8, Validation Accuracy: 0.6745393162578528
+k=9, Validation Accuracy: 0.6775105366269781
+k=10, Validation Accuracy: 0.6744670237914507
+Best k determined: 9 with Validation Accuracy: 0.6775105366269781
+
+K-Means Test Set Performance:
+Accuracy: 0.6799274188884391
+Precision: 0.8791141563685305
+Recall: 0.4161417835888971
+
+Baseline Model Test Set Performance:
+Accuracy: 0.5007301486322364
+Precision: 0.0
+Recall: 0.0
+Elbow plot saved as kmeans_elbow_plot_2.png
+PCA clusters plot saved as kmeans_pca_clusters_plot_2.png
+Cluster distribution plot saved as kmeans_cluster_distribution_plot_2.png
+Best Hyperparameters from Randomized Search: {'n_estimators': 50, 'min_samples_split': 10, 'max_depth': None}
+
+Random Forest Test Set Performance:
+Accuracy: 0.8170
+Precision: 0.8447
+Recall: 0.7763
