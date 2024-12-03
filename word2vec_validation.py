@@ -48,6 +48,3 @@ for train_index, test_index in kf.split(embeddings, labels):
 average_accuracy = np.mean(accuracies)
 print(f"\nAverage Accuracy across 10 folds: {average_accuracy:.2f}")
 
-# Save the cross-validation results for future analysis (optional)
-np.save("/zhome/27/f/203294/ComputationalToolsProject/cross_validation_accuracies.npy", accuracies)
-print("Cross-validation accuracies saved.")
