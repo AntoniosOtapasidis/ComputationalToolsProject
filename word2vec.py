@@ -9,7 +9,7 @@ from gensim.models import Word2Vec
 import matplotlib.pyplot as plt
 from joblib import dump
 
-# Path to your dataset
+# Path to dataset
 file_path = '/zhome/27/f/203294/ComputationalToolsProject/use_this_one.tsv'
 
 # Load the dataset
